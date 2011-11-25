@@ -24,7 +24,6 @@ def hp_fir(N, cutoff, dt):
     return _filter_func
         
 
-
 def insert_extracellular():
     for sec in h.allsec():
         sec.insert("extracellular")
@@ -150,95 +149,6 @@ def get_seg_coords():
 
 
     return coords
-
-
-def grid_var(c, v):
-    xi = np.linspace(c['x'].min(), c['x'].max(), 100)
-    yi = np.linspace(c['y'].min(), c['y'].max(), 100)
-    zi = griddata((c['x'], c['y']), v, (xi[None,:], yi[:,None]),
-                  method='cubic')
-    return xi, yi, zi
-
-
-def anim_imshow(V, **kwargs):
-    plt.ion()
-    ax=plt.subplot(111)
-    cp = plt.imshow(V[0,:,:], **kwargs)
-    cbar = plt.colorbar()
-    for i in range(1,V.shape[0]):
-        ax.clear()
-        cp = plt.imshow(V[i,:,:], **kwargs)
-        plt.text(0.1, 0.9, "t=%f" % (i*h.dt,), transform=ax.transAxes)
-        plt.draw()
-
-    plt.ioff()
-def anim_contour(c, V):
-    plt.ion()
-    xi, yi, zi = grid_var(c, V[0,:])
-    vmin, vmax = V.min(), V.max()
-    ax=plt.subplot(111)
-    cp = plt.contourf(xi, yi, zi)
-    cbar = plt.colorbar()
-    for i in range(1,V.shape[0]):
-        ax.clear()
-        xi, yi, zi = grid_var(c, V[i,:])
-        cp = plt.contourf(xi, yi, zi)
-        plt.text(0.1, 0.9, "t=%f" % (i*h.dt,), transform=ax.transAxes)
-        plt.clim(vmin, vmax)
-        plt.draw()
-
-    plt.ioff()
-
-def get_grid(c,npts=100):
-    x,y = c['x'], c['y']
-    xi = np.linspace(x.min(), x.max(), npts)
-    yi = np.linspace(y.min(), y.max(), npts)
-    XX, YY = np.meshgrid(xi, yi)
-    return XX, YY
-
-def csd_map(c,I):
-    x,y = c['x'], c['y']
-    XX,YY = get_grid(c, 100)
-    #ii = np.argsort(x)
-    #x = x[ii]
-    #I = I[:,ii]
-    t = np.arange(0, tstop+h.dt, h.dt)
-    Ii = griddata((x,y), I.T, (XX, YY),method='cubic', fill_value=0)
-    Ii = np.ma.masked_invalid(Ii)
-    #plt.imshow(np.ma.mean(Ii,0))
-    plt.imshow(Ii[:,:,100])
-    plt.colorbar()
-    #XX, YY = np.meshgrid(xi, t)
-    #plt.pcolor(XX,YY, Ii.T)
-
-    
-def kernel_csd(c, v, sigma=1):
-    def _gauss_kernel(x,center, sigma=1):
-        xx,yy = x
-        xc, yc = center
-        return np.exp(-((xx-xc)**2+(yy-yc)**2)/sigma)
-
-    def _kernel_est(c, z, xi, yi, kernel):
-        res = np.zeros((z.shape[0], xi.shape[0],xi.shape[1]))
-        for i in xrange(z.shape[1]):
-            center = (c['x'][i], c['y'][i])
-            k = kernel((xi,yi), center)
-            res += k[None, :,:]*z[:,i,None,None]
-        return res
-
-    #xi = np.linspace(c['x'].min(), c['x'].max(), 100)
-    #yi = np.linspace(c['y'].min(), c['y'].max(), 100)
-
-    #xx, yy = np.meshgrid(xi, yi)
-    #nn, xedge, yedge = np.histogram2d(c['x'],c['y'], [xi, yi])
-    #K = _gauss_kernel((xx,yy), (0,0))
-    #v_kernel = scipy.signal.convolve2d(nn, K)
-    XX,YY = get_grid(c)
-    K = partial(_gauss_kernel, sigma=sigma)
-    v_kernel = _kernel_est(c, v, XX, YY, K)
-    return v_kernel
-    
-            
 
 
 def initialize():
