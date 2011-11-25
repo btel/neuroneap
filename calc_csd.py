@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 
+import sitecustomize
 import neuron
 import numpy as np
 import matplotlib.pyplot as plt
@@ -107,6 +108,7 @@ def get_seg_coords():
                              ("x1", np.float32),
                              ("y1", np.float32),
                              ("z1", np.float32),
+                             ("L", np.float32),
                              ("diam", np.float32)
                             ])
     j = 0
@@ -121,6 +123,7 @@ def get_seg_coords():
         nseg = sec.nseg
         pt3d_x = arcl/arcl[-1]
         diams = np.ones(nseg)*sec.diam
+        lengths = np.ones(nseg)*sec.L*1./nseg
       
         seg_x = np.arange(nseg)*1./nseg
         
@@ -144,6 +147,7 @@ def get_seg_coords():
         coords['z1'][j:j+nseg]=z_coord
 
         coords['diam'][j:j+nseg] = diams
+        coords['L'][j:j+nseg] = lengths
 
         j+=nseg
 
@@ -193,8 +197,11 @@ def calc_lsa(pos, coord, I, eta=3.5):
 
         rad_dist = _vlen(np.cross(dx1, dx2, axis=0))/_vlen(dx12)
 
-        longl_dist = np.sqrt(np.sum(dx1**2,0)-rad_dist**2)
 
+        dxs = np.vstack((np.sum(dx1**2,0), np.sum(dx2**2,0)))
+        r = np.min(dxs,0)
+        longl_dist = np.sqrt(r-rad_dist**2)
+        
         return rad_dist, longl_dist
 
     pos = np.array(pos)
@@ -204,7 +211,8 @@ def calc_lsa(pos, coord, I, eta=3.5):
     
     r, d  = _cylindric_coords(pt1, pt2, pos)
     l = _vlen(pt1-pt2)
-    assert (r>0).all()
+    #l = coord['L']
+    assert (r>=0).all()
     I = I*1.E4*np.pi*diam*1E-6
     C = 1./(4*np.pi)*eta
     v_ext = C*I*np.log(np.abs(r**2+(d+l)**2)/np.abs(r**2+d**2))/2.
@@ -225,6 +233,27 @@ def plot_neuron(coords, scalar, cmap=cm.hot):
     a.autoscale_view()
     plt.axis('equal')
 
+def contour_p2p(coords, I, xrange=(-4000, 4000), yrange=(-4000, 4000),
+               z=0):
+    xmin, xmax = xrange
+    ymin, ymax = yrange
+    
+
+    n_x = n_y = 20
+    x = np.linspace(xmin, xmax, n_x)
+    y = np.linspace(ymin, ymax, n_y)
+
+    XX, YY = np.meshgrid(x, y)
+
+    p2p = np.zeros(XX.shape)
+
+    for i in range(n_x):
+        for j in range(n_y):
+            v_ext = calc_lsa((XX[i,j], YY[i,j], z), coords, I)
+            p2p[i,j] = np.log(v_ext.max() - v_ext.min())
+
+    plt.contour(XX, YY, p2p)
+
 if __name__ == '__main__':
 
     h.load_file("demo_ext.hoc")
@@ -239,7 +268,7 @@ if __name__ == '__main__':
     c = get_coords()
     seg_coords = get_seg_coords()
     
-    selection = ~filter_sections("none")
+    selection = filter_sections("(node)|(myelin)")
 
     #l1 = c['L']
     #pt1 = np.vstack((seg_coords['x0'], seg_coords['y0'], seg_coords['z0']))
@@ -249,7 +278,7 @@ if __name__ == '__main__':
     #plt.plot((l2-l1)/l1)
     #plt.show()
  
-    pos = (-4000, -200,0)
+    pos = (0, 2500,0)
     x0, y0, z0= pos
        
     v_ext = calc_lsa(pos, seg_coords[selection], I[:, selection])
@@ -262,15 +291,17 @@ if __name__ == '__main__':
     #plt.plot([seg_coords['y0'], seg_coords['y1']],
     #         [seg_coords['x0'], seg_coords['x1']],
     #         color=np.log(np.abs(I*S).max(0)))
-    plt.plot([y0], [x0], 'ro')
+    plt.plot([x0], [y0], 'ro')
     plt.figure()
-    plt.plot(t, fir(calc_v_ext(pos, c, I)), 'b--')
-    plt.plot(t, fir(calc_v_ext(pos, c[selection], I[:, selection])), 'b-')
-    plt.plot(t, fir(calc_v_ext(pos, c[~selection], I[:, ~selection])), 'r-')
+    plt.plot(t, fir(calc_lsa(pos, seg_coords, I)), 'b--')
+    plt.plot(t, fir(calc_lsa(pos, seg_coords[selection], I[:, selection])), 'b-')
+    plt.plot(t, fir(calc_lsa(pos, seg_coords[~selection], I[:, ~selection])), 'r-')
     plt.figure()
     isnode = filter_sections("node")
     plt.plot(I[:, isnode][np.array([1080, 1160]),:].T)
     plt.figure()
     plt.plot(t, fir(calc_v_ext(pos, c[selection], I[:, selection])), 'r-')
     plt.plot(t, fir(v_ext), 'b-')
+    #plt.figure()
+    #contour_p2p(seg_coords[selection], I[:, selection])
     plt.show()
