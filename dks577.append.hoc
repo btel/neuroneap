@@ -4,7 +4,7 @@
 // Select which dendrites get na/kd channels
 // --------------------------------------------------------------
 
-n_axon_seg = 10
+n_axon_seg = 25
 // n_axon_seg = 25
 create myelin[n_axon_seg],node[n_axon_seg]
 
@@ -184,7 +184,7 @@ forsec path {
       diam = 1.5	 
     }
     node[i] {		// nodes of Ranvier
-      nseg = 5
+      nseg = 1
       L = 1.0		
       diam = 1.0	// nodes are thinner than axon
     }

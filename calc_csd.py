@@ -268,7 +268,7 @@ if __name__ == '__main__':
     c = get_coords()
     seg_coords = get_seg_coords()
     
-    selection = filter_sections("(node)|(myelin)")
+    selection = filter_sections("(dend)")
 
     #l1 = c['L']
     #pt1 = np.vstack((seg_coords['x0'], seg_coords['y0'], seg_coords['z0']))
