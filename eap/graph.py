@@ -5,17 +5,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm, collections, transforms
 
-def plot_neuron(coords, scalar, cmap=cm.jet):
+def plot_neuron(coords, scalar=None, colors=None, cmap=cm.jet):
    
     a = plt.gca()
     line_segs = [[(c['x0'], c['y0']), (c['x1'], c['y1'])] for c in
                  coords]
-    colors = cmap(plt.normalize()(scalar))
+
+    if colors is None:
+        if scalar is None:
+            colors = [(0,0,0)] # all black
+        else:
+            colors = cmap(plt.normalize()(scalar))
+
     col = collections.LineCollection(line_segs)
     a.add_collection(col, autolim=True)
     col.set_color(colors)
     a.autoscale_view()
     plt.axis('equal')
+    return col
 
 def contour_p2p(coords, I, xrange=(-4000, 4000), yrange=(-4000, 4000),
                z=0):
