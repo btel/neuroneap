@@ -78,7 +78,7 @@ def estimate_lsa(pos, coord, I, eta=3.5):
     v_ext = v_ext*1E6 # nV
     return v_ext.sum(1)
 
-def estimate_on_grid(coords, I, X, Y, z=0):
+def estimate_on_grid(coords, I, XX, YY, z=0):
     """Estimate field on a grid.
     
     Arguments:
@@ -91,14 +91,8 @@ def estimate_on_grid(coords, I, X, Y, z=0):
     * z (scalar, float) - z coordinate 
 
     """
-    if not X.shape==Y.shape:
+    if not XX.shape==YY.shape:
         raise TypeError, "XX and YY must have the same dimensions"
-    
-    if X.ndim==1:
-        XX = X[:, np.newaxis]
-        YY = Y[:, np.newaxis]
-    else:
-        XX, YY = X, Y
     
     ts, _ = I.shape
     xs, ys  = XX.shape
@@ -108,7 +102,7 @@ def estimate_on_grid(coords, I, X, Y, z=0):
             v_ext = estimate_lsa((XX[i,j], YY[i,j], z), coords, I)
             v[:, i,j] = v_ext
 
-    return v.reshape((ts,)+X.shape)
+    return v
 
 def calc_grid(xrange, yrange, n_samp):
     xmin, xmax = xrange
