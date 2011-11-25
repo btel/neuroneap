@@ -6,21 +6,20 @@ import matplotlib.pyplot as plt
 from matplotlib import cm, collections, transforms, colors, ticker
 import field
 
-def plot_neuron(coords, scalar=None, colors=None, cmap=cm.jet):
+def plot_neuron(coords, scalar=None, colors=None,
+                norm=colors.Normalize(), cmap=cm.jet):
    
     a = plt.gca()
     line_segs = [[(c['x0'], c['y0']), (c['x1'], c['y1'])] for c in
                  coords]
 
-    if colors is None:
-        if scalar is None:
-            colors = [(0,0,0)] # all black
-        else:
-            colors = cmap(plt.normalize()(scalar))
-
-    col = collections.LineCollection(line_segs)
+    col = collections.LineCollection(line_segs, cmap=cmap, norm=norm)
     a.add_collection(col, autolim=True)
-    col.set_color(colors)
+    if scalar is not None:
+        col.set_array(scalar)
+    else:
+        col.set_color(colors)
+
     a.autoscale_view()
     plt.axis('equal')
     return col
