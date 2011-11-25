@@ -10,7 +10,6 @@ sample potential waveforms at selected positions (black curves).
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import transforms
 from eap import field, cell, graph
 
 dt = 0.025
