@@ -3,7 +3,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import cm, collections, transforms
+from matplotlib import cm, collections, transforms, colors, ticker
+import field
 
 def plot_neuron(coords, scalar=None, colors=None, cmap=cm.jet):
    
@@ -24,25 +25,29 @@ def plot_neuron(coords, scalar=None, colors=None, cmap=cm.jet):
     plt.axis('equal')
     return col
 
-def contour_p2p(coords, I, xrange=(-4000, 4000), yrange=(-4000, 4000),
-               z=0):
-    xmin, xmax = xrange
-    ymin, ymax = yrange
+def logcontour(xx, yy, zz, n_contours=10):
     
+    v = np.logspace(np.log10(np.min(zz[:])),
+                    np.log10(np.max(zz[:])), n_contours)
+    lev_exp = np.arange(np.floor(np.log10(v.min())-1),
+                           np.floor(np.log10(v.max())+1))
+    
+    levs = np.power(10, lev_exp)*np.array([1, 2, 5])[:, np.newaxis]
+    levs = np.hstack(levs).astype(int)
+   
+    def pow_fmt(q, m):
+        if (m < 2) and (m > 0):
+            return "%d" % (10**m * q)
+        if q == 1:
+            return  r"$10^{%d}$" % (m,)
+        else:
+            return r"$%d\cdot10^{%d}$" % (q,m)
 
-    n_x = n_y = 20
-    x = np.linspace(xmin, xmax, n_x)
-    y = np.linspace(ymin, ymax, n_y)
 
-    XX, YY = np.meshgrid(x, y)
+    fmt = [ pow_fmt(q,m) for q in [1,2,5] for m in lev_exp]
 
-    p2p = np.zeros(XX.shape)
+    fmt = dict(zip(levs, fmt))
 
-    for i in range(n_x):
-        for j in range(n_y):
-            v_ext = calc_lsa((XX[i,j], YY[i,j], z), coords, I)
-            p2p[i,j] = np.log(v_ext.max() - v_ext.min())
-
-    plt.contour(XX, YY, p2p)
-
+    cs = plt.contour(xx, yy, zz, levs, norm=colors.LogNorm() )
+    plt.clabel(cs, cs.levels, fmt=fmt, inline=1)
 

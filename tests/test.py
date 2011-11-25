@@ -32,7 +32,7 @@ def test_lsa_cylinder_longl():
     x_pos  = -1.
     pos = (x_pos, 0, 0)
     coord, I = conf_cylinder()
-    v = field.calc_lsa(pos, coord, I, eta=eta)
+    v = field.estimate_lsa(pos, coord, I, eta=eta)
     v_analytical = 1e6/(4*np.pi) * eta*I_0*1E4*(np.pi*diam*1E-6) * np.log((L-x_pos)/L)
     np.testing.assert_almost_equal(v[0], v_analytical)
 
@@ -40,7 +40,7 @@ def test_lsa_cylinder_radial():
     y_pos = 1.
     pos = (0, y_pos, 0)
     coord, I = conf_cylinder()
-    v = field.calc_lsa(pos, coord, I, eta=eta)
+    v = field.estimate_lsa(pos, coord, I, eta=eta)
     v_analytical = (1e6/(4*np.pi) * eta*I_0*1E4*(np.pi*diam*1E-6) *
                     np.log((y_pos**2+L**2)/y_pos**2))/2.
 
@@ -50,7 +50,7 @@ def test_lsa_cylinder_radial_inv():
     y_pos = 1.
     pos = (0, 1., 0)
     coord, I = conf_cylinder((-1.,0.,0.))
-    v = field.calc_lsa(pos, coord, I, eta=eta)
+    v = field.estimate_lsa(pos, coord, I, eta=eta)
     v_analytical = (1e6/(4*np.pi) * eta*I_0*1E4*(np.pi*diam*1E-6) *
                     np.log((y_pos**2+L**2)/y_pos**2))/2.
 
@@ -60,7 +60,7 @@ def test_lsa_cylinder_far():
     y_pos = 1E8
     pos = (0., y_pos, 0)
     coord, I = conf_cylinder()
-    v = field.calc_lsa(pos, coord, I, eta=eta)
+    v = field.estimate_lsa(pos, coord, I, eta=eta)
 
     assert_almost_equal(v[0], 0)
 
@@ -73,7 +73,7 @@ def test_lsa_symmetric_cylinders():
     print coord
 
     pos = (0, 10, 0)
-    v = field.calc_lsa(pos, coord, I, eta=eta)
+    v = field.estimate_lsa(pos, coord, I, eta=eta)
 
     assert_almost_equal(v[0], 0) 
 
@@ -85,13 +85,13 @@ def test_lsa_symmetry():
     I = np.hstack((I1, I2))
 
     pos = (1., 1., 0)
-    v1 = field.calc_lsa(pos, coord, I, eta=eta)
+    v1 = field.estimate_lsa(pos, coord, I, eta=eta)
     pos = (-1., 1., 0)
-    v2 = field.calc_lsa(pos, coord, I, eta=eta)
+    v2 = field.estimate_lsa(pos, coord, I, eta=eta)
     pos = (1., -1., 0)
-    v3 = field.calc_lsa(pos, coord, I, eta=eta)
+    v3 = field.estimate_lsa(pos, coord, I, eta=eta)
     pos = (-1., -1., 0)
-    v4 = field.calc_lsa(pos, coord, I, eta=eta)
+    v4 = field.estimate_lsa(pos, coord, I, eta=eta)
 
     assert_almost_equal(v1, v2) 
     assert_almost_equal(v2, v3) 
@@ -117,7 +117,7 @@ def test_lsa_cylinder_divide():
     print coord_division, coord_total
 
     I_div = np.ones((1,len(coord_division)))*I_0
-    v_division = field.calc_lsa(pos, coord_division, I_div)
-    v_total = field.calc_lsa(pos, coord_total, I)
+    v_division = field.estimate_lsa(pos, coord_division, I_div)
+    v_total = field.estimate_lsa(pos, coord_total, I)
 
     assert_almost_equal(v_total, v_division, decimal=4)

@@ -40,7 +40,7 @@ def calc_v_ext(pos, coord,  I, eta=3.5):
     v_ext = np.sum(1./(4*np.pi)*eta*I*S/r,1) * 1E6 # nV
     return v_ext
 
-def calc_lsa(pos, coord, I, eta=3.5):
+def estimate_lsa(pos, coord, I, eta=3.5):
 
     def _vlen(x):
         return np.sqrt(np.sum(x**2,0))
@@ -76,5 +76,31 @@ def calc_lsa(pos, coord, I, eta=3.5):
     #v_ext = C*I*np.log(np.abs(np.sqrt(d**2+r)-d)/np.abs(np.sqrt((l+d)**2+r**2)-l-d))
     v_ext[np.isnan(v_ext)] = 0
     v_ext = v_ext*1E6 # nV
-    return v_ext.sum(1) 
+    return v_ext.sum(1)
+
+def estimate_on_grid(coords, I, xrange=(-4000, 4000),
+                     yrange=(-4000,4000),z=0, n_samp=20):
+    xmin, xmax = xrange
+    ymin, ymax = yrange
+    
+    try:
+        n_x, n_y = n_samp
+    except TypeError:
+        n_x = n_y = n_samp
+
+    x = np.linspace(xmin, xmax, n_x)
+    y = np.linspace(ymin, ymax, n_y)
+
+    XX, YY = np.meshgrid(x, y)
+    
+    ts, _ = I.shape
+    xs, ys  = XX.shape
+    v = np.zeros((ts, xs, ys))
+    for i in range(n_x):
+        for j in range(n_y):
+            v_ext = estimate_lsa((XX[i,j], YY[i,j], z), coords, I)
+            v[:, i,j] = v_ext
+
+    return XX, YY, v
+
 
