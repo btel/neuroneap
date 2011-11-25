@@ -1,20 +1,16 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-import sitecustomize
-import neuron
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import cm, collections, transforms
-from scipy.interpolate import griddata
-from functools import partial
 import scipy.signal
 import re
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-
-h = neuron.h
+def filter_sections(type):
+    sec_type = []
+    for sec in h.allsec():
+        istype = re.match(type, sec.name()) is not None
+        sec_type += [istype]*sec.nseg
+    return np.array(sec_type)
 
 def hp_fir(N, cutoff, dt):
     Fs = 1./(dt*1.E-3)
@@ -24,150 +20,6 @@ def hp_fir(N, cutoff, dt):
         return filt_sig
     return _filter_func
         
-
-def insert_extracellular():
-    for sec in h.allsec():
-        sec.insert("extracellular")
-
-def get_v():
-    v = []
-    for sec in h.allsec():
-        for seg in sec:
-            v.append(seg.v)
-    return v
-
-def get_i():
-    v = []
-    for sec in h.allsec():
-        for seg in sec:
-            v.append(seg.i_membrane)
-    return v
-
-def get_nsegs():
-    nsegs = 0
-    for sec in h.allsec():
-        nsegs += sec.nseg
-    return nsegs
-
-def filter_sections(type):
-    sec_type = []
-    for sec in h.allsec():
-        istype = re.match(type, sec.name()) is not None
-        sec_type += [istype]*sec.nseg
-    return np.array(sec_type)
-
-def get_coords():
-    total_segs = get_nsegs()
-    coords = np.zeros(total_segs,
-                      dtype=[("x", np.float32),
-                             ("y", np.float32),
-                             ("z", np.float32),
-                             ("L", np.float32),
-                             ("diam", np.float32)
-                            ])
-    j = 0
-    for sec in h.allsec():
-        n3d = int(h.n3d(sec))
-        x = np.array([h.x3d(i,sec) for i in range(n3d)])
-        y = np.array([h.y3d(i,sec) for i in range(n3d)])
-        z = np.array([h.z3d(i,sec) for i in range(n3d)])
-        nseg = sec.nseg
-        pt3d_x = np.arange(n3d)
-        seg_x = np.arange(nseg)+0.5
-
-        if len(pt3d_x)<1:
-            x_coord = y_coord = z_coord =np.ones(nseg)*np.nan
-        else:
-            x_coord = np.interp(seg_x, pt3d_x, x)
-            y_coord = np.interp(seg_x, pt3d_x, y)
-            z_coord = np.interp(seg_x, pt3d_x, z)
-      
-        lengths = np.zeros(nseg)
-        diams = np.zeros(nseg)
-        
-        lengths = np.ones(nseg)*sec.L*1./nseg
-        diams = np.ones(nseg)*sec.diam
-
-        coords['x'][j:j+nseg]=x_coord
-        coords['y'][j:j+nseg]=y_coord
-        coords['z'][j:j+nseg]=z_coord
-        coords['L'][j:j+nseg]=lengths
-        coords['diam'][j:j+nseg]=diams
-
-        j+=nseg
-
-
-    return coords
-
-def get_seg_coords():
-    total_segs = get_nsegs()
-    coords = np.zeros(total_segs,
-                      dtype=[("x0", np.float32),
-                             ("y0", np.float32),
-                             ("z0", np.float32),
-                             ("x1", np.float32),
-                             ("y1", np.float32),
-                             ("z1", np.float32),
-                             ("L", np.float32),
-                             ("diam", np.float32)
-                            ])
-    j = 0
-    for sec in h.allsec():
-        n3d = int(h.n3d(sec))
-        x = np.array([h.x3d(i,sec) for i in range(n3d)])
-        y = np.array([h.y3d(i,sec) for i in range(n3d)])
-        z = np.array([h.z3d(i,sec) for i in range(n3d)])
-
-        arcl = np.sqrt(np.diff(x)**2+np.diff(y)**2+np.diff(z)**2)
-        arcl = np.cumsum(np.concatenate(([0], arcl)))
-        nseg = sec.nseg
-        pt3d_x = arcl/arcl[-1]
-        diams = np.ones(nseg)*sec.diam
-        lengths = np.ones(nseg)*sec.L*1./nseg
-      
-        seg_x = np.arange(nseg)*1./nseg
-        
-        x_coord = np.interp(seg_x, pt3d_x, x)
-        y_coord = np.interp(seg_x, pt3d_x, y)
-        z_coord = np.interp(seg_x, pt3d_x, z)
-      
-
-        coords['x0'][j:j+nseg]=x_coord
-        coords['y0'][j:j+nseg]=y_coord
-        coords['z0'][j:j+nseg]=z_coord
-        
-        seg_x = (np.arange(nseg)+1.)/nseg
-
-        x_coord = np.interp(seg_x, pt3d_x, x)
-        y_coord = np.interp(seg_x, pt3d_x, y)
-        z_coord = np.interp(seg_x, pt3d_x, z)
-        
-        coords['x1'][j:j+nseg]=x_coord
-        coords['y1'][j:j+nseg]=y_coord
-        coords['z1'][j:j+nseg]=z_coord
-
-        coords['diam'][j:j+nseg] = diams
-        coords['L'][j:j+nseg] = lengths
-
-        j+=nseg
-
-
-    return coords
-
-
-def initialize():
-    #insert_extracellular()
-    h.fcurrent()
-
-def integrate(tstop):
-    V_all = []
-    while h.t < tstop:
-        h.fadvance()
-        v= get_i()
-        V_all.append(v)
-    t = np.arange(0, len(V_all))*h.dt
-    return t, np.array(V_all)
-
 def calc_v_ext(pos, coord,  I, eta=3.5):
     """
     conductivity [eta] = Ohm.m
@@ -221,44 +73,9 @@ def calc_lsa(pos, coord, I, eta=3.5):
     v_ext = v_ext*1E6 # nV
     return v_ext.sum(1) 
 
-def plot_neuron(coords, scalar, cmap=cm.hot):
-   
-    a = plt.gca()
-    line_segs = [[(c['x0'], c['y0']), (c['x1'], c['y1'])] for c in
-                 coords]
-    colors = cmap(plt.normalize()(scalar))
-    col = collections.LineCollection(line_segs)
-    a.add_collection(col, autolim=True)
-    col.set_color(colors)
-    a.autoscale_view()
-    plt.axis('equal')
-
-def contour_p2p(coords, I, xrange=(-4000, 4000), yrange=(-4000, 4000),
-               z=0):
-    xmin, xmax = xrange
-    ymin, ymax = yrange
-    
-
-    n_x = n_y = 20
-    x = np.linspace(xmin, xmax, n_x)
-    y = np.linspace(ymin, ymax, n_y)
-
-    XX, YY = np.meshgrid(x, y)
-
-    p2p = np.zeros(XX.shape)
-
-    for i in range(n_x):
-        for j in range(n_y):
-            v_ext = calc_lsa((XX[i,j], YY[i,j], z), coords, I)
-            p2p[i,j] = np.log(v_ext.max() - v_ext.min())
-
-    plt.contour(XX, YY, p2p)
-
 if __name__ == '__main__':
 
-    h.load_file("demo_ext.hoc")
     tstop=50
-    h.dt = 0.025
     
     fir = hp_fir(401, 800., h.dt)
     
