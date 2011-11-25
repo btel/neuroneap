@@ -78,8 +78,39 @@ def estimate_lsa(pos, coord, I, eta=3.5):
     v_ext = v_ext*1E6 # nV
     return v_ext.sum(1)
 
-def estimate_on_grid(coords, I, xrange=(-4000, 4000),
-                     yrange=(-4000,4000),z=0, n_samp=20):
+def estimate_on_grid(coords, I, X, Y, z=0):
+    """Estimate field on a grid.
+    
+    Arguments:
+
+    * coord (structured array) -- coordinates of neuron segments (see
+    estimate_lsa for details)
+    * I (2d array, float) -- current densities in time and (neuronal) space
+    * X (2d array, float) -- X coordinates of grid data 
+    * Y (2d array, float) -- Y coordinates of grid data
+    * z (scalar, float) - z coordinate 
+
+    """
+    if not X.shape==Y.shape:
+        raise TypeError, "XX and YY must have the same dimensions"
+    
+    if X.ndim==1:
+        XX = X[:, np.newaxis]
+        YY = Y[:, np.newaxis]
+    else:
+        XX, YY = X, Y
+    
+    ts, _ = I.shape
+    xs, ys  = XX.shape
+    v = np.zeros((ts, xs, ys))
+    for i in range(xs):
+        for j in range(ys):
+            v_ext = estimate_lsa((XX[i,j], YY[i,j], z), coords, I)
+            v[:, i,j] = v_ext
+
+    return v.reshape((ts,)+X.shape)
+
+def calc_grid(xrange, yrange, n_samp):
     xmin, xmax = xrange
     ymin, ymax = yrange
     
@@ -93,14 +124,5 @@ def estimate_on_grid(coords, I, xrange=(-4000, 4000),
 
     XX, YY = np.meshgrid(x, y)
     
-    ts, _ = I.shape
-    xs, ys  = XX.shape
-    v = np.zeros((ts, xs, ys))
-    for i in range(n_x):
-        for j in range(n_y):
-            v_ext = estimate_lsa((XX[i,j], YY[i,j], z), coords, I)
-            v[:, i,j] = v_ext
-
-    return XX, YY, v
-
+    return XX, YY
 

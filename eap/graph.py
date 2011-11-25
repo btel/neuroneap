@@ -51,3 +51,5 @@ def logcontour(xx, yy, zz, n_contours=10):
     cs = plt.contour(xx, yy, zz, levs, norm=colors.LogNorm() )
     plt.clabel(cs, cs.levels, fmt=fmt, inline=1)
 
+def spike_multiplies():
+    pass
