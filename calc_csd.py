@@ -210,8 +210,8 @@ def calc_lsa(pos, coord, I, eta=3.5):
     diam = coord['diam']
     
     r, d  = _cylindric_coords(pt1, pt2, pos)
-    l = _vlen(pt1-pt2)
-    #l = coord['L']
+    #l = _vlen(pt1-pt2)
+    l = coord['L']
     assert (r>=0).all()
     I = I*1.E4*np.pi*diam*1E-6
     C = 1./(4*np.pi)*eta
@@ -260,7 +260,6 @@ if __name__ == '__main__':
     tstop=50
     h.dt = 0.025
     
-
     fir = hp_fir(401, 800., h.dt)
     
     initialize()
@@ -270,14 +269,6 @@ if __name__ == '__main__':
     
     selection = filter_sections("(dend)")
 
-    #l1 = c['L']
-    #pt1 = np.vstack((seg_coords['x0'], seg_coords['y0'], seg_coords['z0']))
-    #pt2 = np.vstack((seg_coords['x1'], seg_coords['y1'], seg_coords['z1']))
-    #l2 = np.sqrt(np.sum((pt1-pt2)**2,0))
-    #
-    #plt.plot((l2-l1)/l1)
-    #plt.show()
- 
     pos = (0, 2500,0)
     x0, y0, z0= pos
        
@@ -287,21 +278,22 @@ if __name__ == '__main__':
     ax = plt.subplot(111)
     S = np.sqrt(np.pi)*c['diam']*c['L']
     plot_neuron(seg_coords, np.log(np.abs(I*S).max(0)), cmap=cm.jet)
-    #print isdend
-    #plt.plot([seg_coords['y0'], seg_coords['y1']],
-    #         [seg_coords['x0'], seg_coords['x1']],
-    #         color=np.log(np.abs(I*S).max(0)))
     plt.plot([x0], [y0], 'ro')
+    
     plt.figure()
     plt.plot(t, fir(calc_lsa(pos, seg_coords, I)), 'b--')
     plt.plot(t, fir(calc_lsa(pos, seg_coords[selection], I[:, selection])), 'b-')
     plt.plot(t, fir(calc_lsa(pos, seg_coords[~selection], I[:, ~selection])), 'r-')
+    
     plt.figure()
     isnode = filter_sections("node")
     plt.plot(I[:, isnode][np.array([1080, 1160]),:].T)
+    
     plt.figure()
     plt.plot(t, fir(calc_v_ext(pos, c[selection], I[:, selection])), 'r-')
     plt.plot(t, fir(v_ext), 'b-')
+   
     #plt.figure()
     #contour_p2p(seg_coords[selection], I[:, selection])
+   
     plt.show()
