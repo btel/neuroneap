@@ -43,20 +43,21 @@ v_ext = field.estimate_lsa(pos, coords, I)
 
 # PLOTS
 fig = plt.figure()
-ax1= plt.subplot(2,2,1, frameon=False)
+fig.subplots_adjust(left=0.05, wspace=0)
+ax1= fig.add_subplot(1,2,1, frameon=False)
 graph.plot_neuron(coords)
 plt.plot([pos[0]], [pos[1]], 'ro')
 ax1.text(0.05, 0.9, 'A', weight='bold',
          transform=ax1.transAxes)
 
 ## scalebar
-xp, yp =  -2000, -2000
+xp, yp =  -1500, -2000
 w, h = 1000, 1000
-plt.plot([xp, xp], [yp, yp+h], 'k-')
-plt.plot([xp, xp+h], [yp, yp], 'k-')
-plt.text(xp-100, yp+h/2., "1 mm", ha='right', va='center',
+ax1.plot([xp, xp], [yp, yp+h], 'k-')
+ax1.plot([xp, xp+h], [yp, yp], 'k-')
+ax1.text(xp-100, yp+h/2., "1 mm", ha='right', va='center',
          transform=ax1.transData)
-plt.text(xp+h/2., yp-100, "1 mm", ha='center', va='top',
+ax1.text(xp+h/2., yp-100, "1 mm", ha='center', va='top',
          transform=ax1.transData)
 
 plt.xlim([-3000, 3000])
@@ -64,14 +65,14 @@ plt.ylim([-3000, 3000])
 plt.xticks([])
 plt.yticks([])
 
-ax2 = plt.subplot(2,2,2)
+ax2 = fig.add_subplot(2,2,2)
 plt.plot(t, v_ext, 'r-')
 plt.xlim([10, 40])
 plt.ylabel("EAP (nV)")
 ax2.text(0.05, 0.9, 'B', weight='bold',
          transform=ax2.transAxes)
 
-ax3 = plt.subplot(2,2,4)
+ax3 = fig.add_subplot(2,2,4)
 plt.plot(t, fir(v_ext), 'r-')
 plt.xlim([10, 40])
 plt.xlabel('time (ms)')
@@ -80,4 +81,4 @@ ax3.text(0.05, 0.9, 'C', weight='bold',
          transform=ax3.transAxes)
 
 print __doc__.format(**vars())
-plt.show()
+plt.savefig('fig1.pdf')

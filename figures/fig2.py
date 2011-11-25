@@ -114,5 +114,5 @@ ax3.text(0.05, 0.9, 'C', weight='bold',
 plt.xlabel('time (ms)')
 
 print __doc__.format(**vars())
-plt.show()
+plt.savefig("fig2.pdf")
 

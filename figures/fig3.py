@@ -89,4 +89,4 @@ plt.text(40, 120, '20 ms', ha='center', va='bottom',
         transform=axs[6].transData)
 
 print __doc__
-plt.show()
+plt.savefig('fig3.pdf')

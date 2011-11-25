@@ -5,7 +5,7 @@ import numpy as np
 import scipy.signal
 import re
 
-def filter_sections(coords, type):
+def select_sections(coords, type):
     """Filter segments according to their name (taken from name field
     in coords)
     
