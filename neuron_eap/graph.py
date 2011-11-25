@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm, collections, transforms
 
-def plot_neuron(coords, scalar, cmap=cm.hot):
+def plot_neuron(coords, scalar, cmap=cm.jet):
    
     a = plt.gca()
     line_segs = [[(c['x0'], c['y0']), (c['x1'], c['y1'])] for c in

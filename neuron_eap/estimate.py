@@ -5,12 +5,17 @@ import numpy as np
 import scipy.signal
 import re
 
-def filter_sections(type):
-    sec_type = []
-    for sec in h.allsec():
-        istype = re.match(type, sec.name()) is not None
-        sec_type += [istype]*sec.nseg
-    return np.array(sec_type)
+def filter_sections(coords, type):
+    """Filter segments according to their name (taken from name field
+    in coords)
+    
+    - type - regular expression that the name should match
+    """ 
+    sec_type = np.zeros(len(coords), dtype=np.bool)
+    for i, name in enumerate(coords['name']):
+        if re.match(type, name) is not None:
+            sec_type[i] = True
+    return sec_type
 
 def hp_fir(N, cutoff, dt):
     Fs = 1./(dt*1.E-3)
@@ -73,44 +78,3 @@ def calc_lsa(pos, coord, I, eta=3.5):
     v_ext = v_ext*1E6 # nV
     return v_ext.sum(1) 
 
-if __name__ == '__main__':
-
-    tstop=50
-    
-    fir = hp_fir(401, 800., h.dt)
-    
-    initialize()
-    t, I = integrate(tstop)
-    c = get_coords()
-    seg_coords = get_seg_coords()
-    
-    selection = filter_sections("(dend)")
-
-    pos = (0, 2500,0)
-    x0, y0, z0= pos
-       
-    v_ext = calc_lsa(pos, seg_coords[selection], I[:, selection])
-    
-    fig = plt.figure()
-    ax = plt.subplot(111)
-    S = np.sqrt(np.pi)*c['diam']*c['L']
-    plot_neuron(seg_coords, np.log(np.abs(I*S).max(0)), cmap=cm.jet)
-    plt.plot([x0], [y0], 'ro')
-    
-    plt.figure()
-    plt.plot(t, fir(calc_lsa(pos, seg_coords, I)), 'b--')
-    plt.plot(t, fir(calc_lsa(pos, seg_coords[selection], I[:, selection])), 'b-')
-    plt.plot(t, fir(calc_lsa(pos, seg_coords[~selection], I[:, ~selection])), 'r-')
-    
-    plt.figure()
-    isnode = filter_sections("node")
-    plt.plot(I[:, isnode][np.array([1080, 1160]),:].T)
-    
-    plt.figure()
-    plt.plot(t, fir(calc_v_ext(pos, c[selection], I[:, selection])), 'r-')
-    plt.plot(t, fir(v_ext), 'b-')
-   
-    #plt.figure()
-    #contour_p2p(seg_coords[selection], I[:, selection])
-   
-    plt.show()

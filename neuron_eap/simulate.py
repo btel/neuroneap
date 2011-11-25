@@ -84,6 +84,7 @@ def get_coords():
     return coords
 
 def get_seg_coords():
+    nchars = 12
     total_segs = get_nsegs()
     coords = np.zeros(total_segs,
                       dtype=[("x0", np.float32),
@@ -93,7 +94,8 @@ def get_seg_coords():
                              ("y1", np.float32),
                              ("z1", np.float32),
                              ("L", np.float32),
-                             ("diam", np.float32)
+                             ("diam", np.float32),
+                             ("name", "|S%d" % nchars)
                             ])
     j = 0
     for sec in h.allsec():
@@ -106,9 +108,11 @@ def get_seg_coords():
         arcl = np.cumsum(np.concatenate(([0], arcl)))
         nseg = sec.nseg
         pt3d_x = arcl/arcl[-1]
+        
         diams = np.ones(nseg)*sec.diam
         lengths = np.ones(nseg)*sec.L*1./nseg
-      
+        names = np.repeat(sec.name()[:nchars], nseg).astype("|S%d"%nchars)
+
         seg_x = np.arange(nseg)*1./nseg
         
         x_coord = np.interp(seg_x, pt3d_x, x)
@@ -132,9 +136,8 @@ def get_seg_coords():
 
         coords['diam'][j:j+nseg] = diams
         coords['L'][j:j+nseg] = lengths
-
+        coords['name'][j:j+nseg] = names 
         j+=nseg
-
 
     return coords
 
@@ -144,6 +147,8 @@ def initialize(dt=0.025):
     h.dt = dt
     h.fcurrent()
 
-def load_model(fname):
-    h.load_file("demo_ext.hoc")
+def load_model(hoc_name, dll_name=None):
+    if dll_name:
+        h.nrn_load_dll(dll_name)
+    h.load_file(hoc_name)
 
