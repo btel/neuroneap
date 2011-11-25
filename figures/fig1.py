@@ -39,7 +39,7 @@ t, I = cell.integrate(tstop)
 
 # Calculation of field
 coords = cell.get_seg_coords()
-v_ext = field.calc_lsa(pos, coords, I) 
+v_ext = field.estimate_lsa(pos, coords, I) 
 
 # PLOTS
 fig = plt.figure()

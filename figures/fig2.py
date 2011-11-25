@@ -38,12 +38,12 @@ t, I = cell.integrate(tstop)
 coords = cell.get_seg_coords()
 
 # Select segments
-dend = field.filter_sections(coords, "dend")
-soma = field.filter_sections(coords, "soma")
-axon = field.filter_sections(coords, "(node)|(myelin)")
-iseg = field.filter_sections(coords, "iseg")
-hill = field.filter_sections(coords, "hill")
-all  = field.filter_sections(coords, ".*")
+dend = field.select_sections(coords, "dend")
+soma = field.select_sections(coords, "soma")
+axon = field.select_sections(coords, "(node)|(myelin)")
+iseg = field.select_sections(coords, "iseg")
+hill = field.select_sections(coords, "hill")
+all  = field.select_sections(coords, ".*")
 
 colors = {"dend": "r",
           "soma": "c",
@@ -53,11 +53,11 @@ colors = {"dend": "r",
           "hill" : "m"}
 
 # Calculation of field
-v_dend = field.calc_lsa(pos, coords[dend], I[:, dend])
-v_soma = field.calc_lsa(pos, coords[soma], I[:, soma])
-v_axon = field.calc_lsa(pos, coords[axon], I[:, axon])
-v_iseg = field.calc_lsa(pos, coords[iseg], I[:, iseg])
-v_hill = field.calc_lsa(pos, coords[hill], I[:, hill])
+v_dend = field.estimate_lsa(pos, coords[dend], I[:, dend])
+v_soma = field.estimate_lsa(pos, coords[soma], I[:, soma])
+v_axon = field.estimate_lsa(pos, coords[axon], I[:, axon])
+v_iseg = field.estimate_lsa(pos, coords[iseg], I[:, iseg])
+v_hill = field.estimate_lsa(pos, coords[hill], I[:, hill])
 
 # PLOTS
 fig = plt.figure()
