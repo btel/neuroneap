@@ -32,8 +32,8 @@ pos = (dist*np.sin(alpha)*1000, dist*np.cos(alpha)*1000, 0)
 fir = field.hp_fir(order, cutoff, dt)
 
 # Simulation
-cell.load_model('models/Mainen/demo_ext.hoc',
-                    'models/Mainen/i686/.libs/libnrnmech.so')
+cell.load_model('../models/Mainen/demo_ext.hoc',
+                '../models/Mainen/i686/.libs/libnrnmech.so')
 cell.initialize(dt=dt)
 t, I = cell.integrate(tstop)
 
@@ -80,5 +80,8 @@ plt.ylabel("high-frequency EAP (nV)")
 ax3.text(0.05, 0.9, 'C', weight='bold',
          transform=ax3.transAxes)
 
-print __doc__.format(**vars())
-plt.savefig('fig1.pdf')
+#print __doc__.format(**vars())
+#plt.savefig('fig1.pdf')
+from export import savelatex
+
+savelatex('fig1', __doc__) 
