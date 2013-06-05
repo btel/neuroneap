@@ -29,8 +29,15 @@ def get_v():
 def get_i():
     v = []
     for sec in h.allsec():
-        for seg in sec:
-            v.append(seg.i_membrane)
+        i_sec = [seg.i_membrane for seg in sec]
+        x = [seg.x for seg in sec]
+        #add currents from point processes at the beginning and end of section
+        c_factor = 100 #from  [i/area]=nA/um2 to [i_membrane]=mA/cm2
+        area0 = h.area(x[0], sec=sec)
+        area1 = h.area(x[-1], sec=sec)
+        i_sec[0] += sum(pp.i for pp in sec(0).point_processes())/area0*c_factor
+        i_sec[-1] += sum(pp.i for pp in sec(1).point_processes())/area1*c_factor
+        v += i_sec
     return v
 
 def get_nsegs():

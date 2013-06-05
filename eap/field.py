@@ -40,26 +40,25 @@ def calc_v_ext(pos, coord,  I, eta=3.5):
     v_ext = np.sum(1./(4*np.pi)*eta*I*S/r,1) * 1E6 # nV
     return v_ext
 
+def _cylindric_coords(pt1, pt2, pos):
+
+
+    #calculate distance from line (from wikipedia)
+    n = pt1-pt2
+    n = n/_vlen(n) #normal vector of cylinder axis
+    a = pt1
+    pos = pos[:, np.newaxis]
+
+    rad_dist = _vlen((a - pos)-(np.dot((a-pos).T,n)).T*n)
+
+    longl_dist = (((pos-a)*n).sum(0))
+
+    return rad_dist, longl_dist
+
+def _vlen(x):
+    return np.sqrt(np.sum(x**2,0))
+
 def estimate_lsa(pos, coord, I, eta=3.5):
-
-    def _vlen(x):
-        return np.sqrt(np.sum(x**2,0))
-
-    def _cylindric_coords(pt1, pt2, pos):
-        
-        dx1 = pt1-pos[:, np.newaxis]
-        dx2 = pt2-pos[:, np.newaxis]
-
-        dx12 = pt1-pt2
-
-        rad_dist = _vlen(np.cross(dx1, dx2, axis=0))/_vlen(dx12)
-
-
-        dxs = np.vstack((np.sum(dx1**2,0), np.sum(dx2**2,0)))
-        r = np.min(dxs,0)
-        longl_dist = np.sqrt(r-rad_dist**2)
-        
-        return rad_dist, longl_dist
 
     pos = np.array(pos)
     pt1 = np.vstack((coord['x0'], coord['y0'], coord['z0']))
@@ -72,8 +71,8 @@ def estimate_lsa(pos, coord, I, eta=3.5):
     assert (r>=0).all()
     I = I*1.E4*np.pi*diam*1E-6
     C = 1./(4*np.pi)*eta
-    v_ext = C*I*np.log(np.abs(r**2+(d+l)**2)/np.abs(r**2+d**2))/2.
-    #v_ext = C*I*np.log(np.abs(np.sqrt(d**2+r)-d)/np.abs(np.sqrt((l+d)**2+r**2)-l-d))
+    #v_ext = C*I*np.log(np.abs(r**2+(d+l)**2)/np.abs(r**2+d**2))/2.
+    v_ext = C*I*np.log(np.abs(np.sqrt(d**2+r)-d)/np.abs(np.sqrt((l+d)**2+r**2)-l-d))
     v_ext[np.isnan(v_ext)] = 0
     v_ext = v_ext*1E6 # nV
     return v_ext.sum(1)

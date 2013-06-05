@@ -24,3 +24,8 @@ def test_current_balance_cable():
     cell.initialize(dt=0.025)
     t, I = cell.integrate(1)
     assert (np.abs(I.sum(1))<1e-12).all()
+    h('synapse.loc(0)')
+    h.t = 0
+    t, I = cell.integrate(1)
+    # there is still some problems in accuracy with synapse at the ends of section
+    assert (np.abs(I.sum(1))<1e-7).all()

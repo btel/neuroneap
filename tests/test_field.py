@@ -114,10 +114,34 @@ def test_lsa_cylinder_divide():
         short_cylinders.append(new)
 
     coord_division = np.hstack(short_cylinders)
-    print coord_division, coord_total
 
     I_div = np.ones((1,len(coord_division)))*I_0
     v_division = field.estimate_lsa(pos, coord_division, I_div)
     v_total = field.estimate_lsa(pos, coord_total, I)
 
     assert_almost_equal(v_total, v_division, decimal=4)
+
+def test_lsa_tripole_cylinder():
+    L = 1.
+    cable = [conf_cylinder((i*L, 0, 0), L=L)[0] for i in range(3)]
+    cable = np.hstack(cable)
+    I = np.zeros((1, 3))
+    I[0,0] = I_0
+    I[0,1:] = -I_0/2.
+
+    v1 = field.estimate_lsa((-1.5, 7, 0), cable, I)
+    v2 = field.estimate_lsa((5, 7, 0), cable, I)
+
+    show_potential_on_grid(cable, I)
+    assert v1>0, "Potential is negative"
+    assert v2<0, "Potential is positive"
+
+def show_potential_on_grid(cable, I):
+    import matplotlib.pyplot as plt
+    xx, yy = field.calc_grid([-10,10], [-10,10], 10)
+    v_ext = field.estimate_on_grid(cable, I, xx, yy)
+    plt.contour(xx, yy, v_ext[0,:,:])
+    plt.show()
+
+
+
