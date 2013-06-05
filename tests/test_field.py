@@ -142,6 +142,27 @@ def test_lsa_tripole_cylinder():
     assert v1>0, "Potential is negative"
     assert v2<0, "Potential is positive"
 
+
+def test_cylindric_coordinates():
+
+    #position, expected result, comment
+    positions = [([0,0], [0,0], "at begin"),
+                 ([1,0], [0, 1], "at end"),
+                 ([-1, 0], [0, -1], "to the left"),
+                 ([2, 0], [0, 2], "to the right"),
+                 ([0, 1], [1, 0], "above left end"),
+                 ([0.5, 1], [1, 0.5], "above in the middle"),
+                 ([-1, -1], [1, -1], "below left")
+                ]
+
+    pt1 = np.array([[0, 0]]).T
+    pt2 = np.array([[1, 0]]).T
+    for pos, expected, comment in positions:
+        obtained = field._cylindric_coords(pt1, pt2, np.array(pos))
+        assert (np.concatenate(obtained)==np.array(expected)).all(), comment
+
+
+
 def show_potential_on_grid(cable, I):
     import matplotlib.pyplot as plt
     xx, yy = field.calc_grid([-10,10], [-10,10], 10)
