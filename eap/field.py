@@ -44,12 +44,12 @@ def _cylindric_coords(pt1, pt2, pos):
 
 
     #calculate distance from line (from wikipedia)
-    n = pt1-pt2
+    n = pt2-pt1
     n = n/_vlen(n) #normal vector of cylinder axis
     a = pt1
     pos = pos[:, np.newaxis]
 
-    rad_dist = _vlen((a - pos)-(np.dot((a-pos).T,n)).T*n)
+    rad_dist = _vlen((a - pos)-((a-pos)*n).sum(0)[None,:]*n)
 
     longl_dist = (((pos-a)*n).sum(0))
 
@@ -72,7 +72,10 @@ def estimate_lsa(pos, coord, I, eta=3.5):
     I = I*1.E4*np.pi*diam*1E-6
     C = 1./(4*np.pi)*eta
     #v_ext = C*I*np.log(np.abs(r**2+(d+l)**2)/np.abs(r**2+d**2))/2.
-    v_ext = C*I*np.log(np.abs(np.sqrt(d**2+r)-d)/np.abs(np.sqrt((l+d)**2+r**2)-l-d))
+    #v_ext = C*I*np.log(np.abs(np.sqrt(d**2+r)-d)/np.abs(np.sqrt((l+d)**2+r**2)-l-d))
+    numerator = l-d+np.sqrt(r**2+(l-d)**2)
+    denominator = -d+np.sqrt(r**2+d**2)
+    v_ext = C*I*np.log(numerator/denominator)
     v_ext[np.isnan(v_ext)] = 0
     v_ext = v_ext*1E6 # nV
     return v_ext.sum(1)

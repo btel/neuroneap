@@ -33,7 +33,7 @@ def test_lsa_cylinder_longl():
     pos = (x_pos, 0, 0)
     coord, I = conf_cylinder()
     v = field.estimate_lsa(pos, coord, I, eta=eta)
-    v_analytical = 1e6/(4*np.pi) * eta*I_0*1E4*(np.pi*diam*1E-6) * np.log((L-x_pos)/L)
+    v_analytical = 1e6/(4*np.pi) * eta*I_0*1E4*(np.pi*diam*1E-6) * np.log((L-x_pos)/(-x_pos))
     np.testing.assert_almost_equal(v[0], v_analytical)
 
 def test_lsa_cylinder_radial():
@@ -41,8 +41,9 @@ def test_lsa_cylinder_radial():
     pos = (0, y_pos, 0)
     coord, I = conf_cylinder()
     v = field.estimate_lsa(pos, coord, I, eta=eta)
-    v_analytical = (1e6/(4*np.pi) * eta*I_0*1E4*(np.pi*diam*1E-6) *
-                    np.log((y_pos**2+L**2)/y_pos**2))/2.
+    v_analytical = (1e6/(4*np.pi) * 
+                     eta*I_0*1E4*(np.pi*diam*1E-6) *
+                     np.log((L+np.sqrt(y_pos**2+L**2))/y_pos))
 
     np.testing.assert_almost_equal(v[0], v_analytical)
 
@@ -51,18 +52,23 @@ def test_lsa_cylinder_radial_inv():
     pos = (0, 1., 0)
     coord, I = conf_cylinder((-1.,0.,0.))
     v = field.estimate_lsa(pos, coord, I, eta=eta)
-    v_analytical = (1e6/(4*np.pi) * eta*I_0*1E4*(np.pi*diam*1E-6) *
-                    np.log((y_pos**2+L**2)/y_pos**2))/2.
+    v_analytical = (1e6/(4*np.pi) * 
+                     eta*I_0*1E4*(np.pi*diam*1E-6) *
+                     np.log((L+np.sqrt(y_pos**2+L**2))/y_pos))
 
     np.testing.assert_almost_equal(v[0], v_analytical)
     
-def test_lsa_cylinder_far():
-    y_pos = 1E8
-    pos = (0., y_pos, 0)
-    coord, I = conf_cylinder()
-    v = field.estimate_lsa(pos, coord, I, eta=eta)
+def test_lsa_cylinder_dipole_ratio():
+    """test if v of dipole falls with 1/r2"""
+    y_pos = 1e3
+    pos = np.array([-L, y_pos, 0])
+    coord = np.hstack([conf_cylinder((-L,0,0))[0],
+                       conf_cylinder((0,0,0))[0]])
+    I = np.array([[-1,1]])
+    v1 = field.estimate_lsa(pos, coord, I, eta=eta)
+    v2 = field.estimate_lsa(2*pos, coord, I, eta=eta)
 
-    assert_almost_equal(v[0], 0)
+    assert_almost_equal(v1/v2, 4, decimal=5)
 
 def test_lsa_symmetric_cylinders():
     coord1, I1 = conf_cylinder()
@@ -132,7 +138,7 @@ def test_lsa_tripole_cylinder():
     v1 = field.estimate_lsa((-1.5, 7, 0), cable, I)
     v2 = field.estimate_lsa((5, 7, 0), cable, I)
 
-    show_potential_on_grid(cable, I)
+    #show_potential_on_grid(cable, I)
     assert v1>0, "Potential is negative"
     assert v2<0, "Potential is positive"
 
@@ -140,7 +146,8 @@ def show_potential_on_grid(cable, I):
     import matplotlib.pyplot as plt
     xx, yy = field.calc_grid([-10,10], [-10,10], 10)
     v_ext = field.estimate_on_grid(cable, I, xx, yy)
-    plt.contour(xx, yy, v_ext[0,:,:])
+    cs=plt.contour(xx, yy, v_ext[0,:,:])
+    plt.clabel(cs)
     plt.show()
 
 
