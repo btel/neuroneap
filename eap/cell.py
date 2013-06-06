@@ -151,8 +151,10 @@ def get_seg_coords():
 
 def initialize(dt=0.025):
     #insert_extracellular()
+    h.finitialize()
     h.dt = dt
     h.fcurrent()
+    h.frecord_init()
 
 def load_model(hoc_name, dll_name=None):
     if dll_name:
