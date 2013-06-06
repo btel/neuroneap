@@ -50,7 +50,7 @@ def logcontour(xx, yy, zz, n_contours=10):
     cs = plt.contour(xx, yy, zz, levs, norm=colors.LogNorm() )
     plt.clabel(cs, cs.levels, fmt=fmt, inline=1)
 
-def plot_multiplies(xx, yy, vv, t=None, w=0.1, h=0.1):
+def plot_multiplies(xx, yy, vv, t=None, w=0.1, h=0.1, sharey=True):
     """Plot small mutiplies of potential  on a grid
     
     * w, h -- multiplies width/height in axes coords.
@@ -58,6 +58,16 @@ def plot_multiplies(xx, yy, vv, t=None, w=0.1, h=0.1):
     Notes:
     You have to make sure that the main axis limits are set correctly
     prior to plotting."""
+
+
+    def axes_locator(xx, yy):
+        def __ax_loc(ax_inset, renderer):
+            transDataToFigure = (ax.transData+fig.transFigure.inverted())
+            x, y = transDataToFigure.transform((xx, yy))
+            bbox = transforms.Bbox.from_bounds(x-w/2., y-h/2., w, h)
+            return bbox
+        return __ax_loc
+        
 
     if t is None:
         t = np.arange(vv.shape[0])
@@ -73,7 +83,9 @@ def plot_multiplies(xx, yy, vv, t=None, w=0.1, h=0.1):
         for j in range(ny):
             x, y = transDataToFigure.transform((xx[i,j], yy[i,j]))
             last_inset = fig.add_axes([x-w/2., y-h/2., w, h], frameon=False,
-                              sharey=last_inset, sharex=last_inset)
+                              sharey=last_inset if sharey else None, 
+                              sharex=last_inset)
+            last_inset.set_axes_locator(axes_locator(xx[i,j],yy[i,j]))
             plt.plot(t, vv[:,i,j], 'k-')
             plt.xticks([])
             plt.yticks([])

@@ -12,6 +12,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from eap import field, cell, graph
 
+import platform
+ARCH = platform.uname()[4]
+
 dt = 0.025
 tstop=50
 
@@ -20,19 +23,20 @@ rho    = 3.5  #conductivity, Ohm.m
 cutoff = 800. #high-pass cutoff, Hz
 order  = 401  #filter order
 Nsamp  = 30
-filter = None
-
-#filter = field.hp_fir(order, cutoff, dt)
+n_waveforms=4
+#filter = None
+pt_idx = 1094
+filter = field.hp_fir(order, cutoff, dt)
 
 # Simulation
 cell.load_model('models/Mainen/demo_ext.hoc',
-                    'models/Mainen/i686/.libs/libnrnmech.so')
+                    'models/Mainen/%s/.libs/libnrnmech.so' % ARCH)
 cell.initialize(dt=dt)
 t, I = cell.integrate(tstop)
 
 # Calculation of field
-xrange = [-3000, 3000]
-yrange = [-3000, 3000]
+xrange = np.array([-600, 600])-150
+yrange = [-1500, 600]
 coords = cell.get_seg_coords()
 xx, yy = field.calc_grid(xrange, yrange, n_samp=Nsamp)
 v_ext = field.estimate_on_grid(coords, I, xx, yy)
@@ -41,52 +45,69 @@ if filter:
     for i in range(v_ext.shape[1]):
         for j in range(v_ext.shape[2]):
             v_ext[:, i, j] = filter(v_ext[:, i, j])
-p2p = v_ext.max(0) - v_ext.min(0)
+
+#sample spike waveforms
+spikes = np.mgrid[xrange[0]:xrange[1]:n_waveforms*1j,
+                  yrange[0]:yrange[1]:n_waveforms*1j]
+
+xx_sp, yy_sp = spikes
+xx_sp, yy_sp = xx_sp.flatten(), yy_sp.flatten()
+xx_sp, yy_sp = xx_sp[:, np.newaxis], yy_sp[:, np.newaxis]
+v_samples = field.estimate_on_grid(coords, I, xx_sp, yy_sp)
+
+for i in range(v_samples.shape[1]):
+    v_samples[:,i,0] = filter(v_samples[:,i,0]) 
 
 # PLOTS
 fig = plt.figure()
 
-## contour plot of the field
 ax = plt.subplot(111, frameon=False)
-graph.logcontour(xx, yy, p2p)
-
 ## plot neuron shape
-graph.plot_neuron(coords, colors='b')
+graph.plot_neuron(coords, colors='0.4')
 
-### convert axis labels to mm
-xlocs, labs = plt.xticks()
-plt.xticks(xlocs, (np.array(xlocs)/1000.).astype(int))
-ylocs, labs = plt.yticks()
-plt.yticks(ylocs, (np.array(ylocs)/1000.).astype(int))
+#get potential values
+#p2p = v_ext.max(0) - v_ext.min(0)
+p2p = v_ext[pt_idx, :, :]
 
-plt.xlabel("position (mm)")
-plt.ylabel("position (mm)")
+## contour plot of the field
+cs = plt.contour(xx, yy, p2p)
+
+for label, line in zip(cs.levels, cs.collections):
+    line.set_label("%g" % label)
+
+plt.legend(loc=2, frameon=False, 
+           bbox_transform=ax.transAxes, 
+           bbox_to_anchor=(1.1,1))
+
+
+plt.axis('scaled')
+
+plt.xlim(xrange)
+plt.ylim(yrange)
+plt.xticks([])
+plt.yticks([])
 
 ## insets with extracellular potential shapes
-spikes = [ (-2500, -2500), 
-           (0,     -2500),
-           (2500,  -2500),
-           (-2500,     0),
-           (2500,      0),
-           (-2500,  2500),
-           (0,      2500),
-           (2500,   2500),
-         ]
+axs = graph.plot_multiplies(xx_sp, yy_sp, v_samples, t, sharey=False)
+for a in axs: a.axvline(t[pt_idx], ls='--', color='k')
+plt.xlim([25, 30])
 
-xx, yy = np.array(spikes).T
-xx, yy = xx[:, np.newaxis], yy[:, np.newaxis]
-v_samples = field.estimate_on_grid(coords, I, xx, yy)
-axs = graph.plot_multiplies(xx, yy, v_samples, t)
-plt.xlim([20, 40])
-
-### add scalebars
-plt.axes(axs[6])
-plt.plot([35, 35], [-100, -300], 'k-')
-plt.text(37, -200, '200 nV', ha='left', va='center', 
-        transform=axs[6].transData)
-plt.plot([35, 45], [100, 100], 'k-')
-plt.text(40, 120, '20 ms', ha='center', va='bottom', 
-        transform=axs[6].transData)
+## add scalebars
+from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+asb =  AnchoredSizeBar(ax.transData,
+                       100,
+                       r"100 $\mu m$",
+                       loc=4,
+                       pad=0.1, borderpad=0.5, sep=5,
+                       frameon=False)
+ax.add_artist(asb)
+#plt.axes(ax)
+#plt.plot([35, 35], [0, -300], 'k-')
+#plt.text(37, -200, '200 nV', ha='left', va='center', 
+#        transform=axs[0].transData)
+#plt.plot([35, 45], [100, 100], 'k-')
+#plt.text(40, 120, '20 ms', ha='center', va='bottom', 
+#        transform=axs[0].transData)
 
 print __doc__
 plt.savefig('fig3.pdf')

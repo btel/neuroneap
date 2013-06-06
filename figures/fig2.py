@@ -16,6 +16,9 @@ import matplotlib.pyplot as plt
 
 from eap import field, cell, graph
 
+import platform
+ARCH = platform.uname()[4]
+
 dt = 0.025
 tstop=50
 
@@ -32,7 +35,7 @@ fir = field.hp_fir(order, cutoff, dt)
 
 # Simulation
 cell.load_model('models/Mainen/demo_ext.hoc',
-                    'models/Mainen/i686/.libs/libnrnmech.so')
+                'models/Mainen/%s/.libs/libnrnmech.so' % ARCH)
 cell.initialize(dt=dt)
 t, I = cell.integrate(tstop)
 coords = cell.get_seg_coords()
