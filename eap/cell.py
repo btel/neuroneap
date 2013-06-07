@@ -35,8 +35,8 @@ def get_i():
         c_factor = 100 #from  [i/area]=nA/um2 to [i_membrane]=mA/cm2
         area0 = h.area(x[0], sec=sec)
         area1 = h.area(x[-1], sec=sec)
-        #i_sec[0] += sum(pp.i for pp in sec(0).point_processes())/area0*c_factor
-        #i_sec[-1] += sum(pp.i for pp in sec(1).point_processes())/area1*c_factor
+        i_sec[0] += sum(pp.i for pp in sec(0).point_processes())/area0*c_factor
+        i_sec[-1] += sum(pp.i for pp in sec(1).point_processes())/area1*c_factor
         v += i_sec
     return v
 
@@ -149,6 +149,14 @@ def get_locs_coord(sec, loc):
     z_coord = np.interp(loc, pt3d_x, z)
 
     return x_coord, y_coord, z_coord
+
+def get_pp_coord(point_process):
+    """get 3d coordinates of a point process such as synapse:
+        point_process -- neuron object"""
+
+    loc = point_process.get_loc()
+    sec = h.cas()
+    return get_locs_coord(sec, loc)
 
 def initialize(dt=0.025):
     #insert_extracellular()

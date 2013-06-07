@@ -9,11 +9,14 @@ from nose import with_setup
 def configure_cell():
     h('vinit=-65')
     h('create cable')
+    h('create soma')
     h('access cable')
     h('nseg = 10')
-    h('insert extracellular')
+    h('L = 10')
     h('insert pas')
     h('e_pas=-65')
+    h('forall insert extracellular')
+    h('define_shape()')
 
 configure_cell()
 
@@ -27,6 +30,7 @@ def add_synapse():
 
 def reset_cell():
     h('objref synapse')
+    h('access cable')
     h.t = 0
 
 @with_setup(add_synapse, reset_cell)
@@ -45,3 +49,18 @@ def test_current_balance_synapse_at_section_end():
     t, I = cell.integrate(1)
     assert (np.abs(I.sum(1))<1e-12).all()
 
+def test_location_coord():
+
+    x, y, z = cell.get_locs_coord(h.cable, 0.15)
+    assert x == 1.5
+    assert y == 0
+    assert z == 0
+
+@with_setup(add_synapse, reset_cell)
+def test_point_process_coord():
+    h('synapse.loc(0.15)')
+    h('access soma')
+    x, y, z = cell.get_pp_coord(h.synapse)
+    assert x == 1.5
+    assert y == 0
+    assert z == 0
