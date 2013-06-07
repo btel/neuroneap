@@ -77,6 +77,7 @@ def plot_multiplies(xx, yy, vv, t=None, w=0.1, h=0.1, sharey=True):
     # calc transform for inset placement
     transDataToFigure = (ax.transData+fig.transFigure.inverted())
     ax_inset = []
+    lines = []
     last_inset = None
     nx, ny = xx.shape
     for i in range(nx):
@@ -86,8 +87,9 @@ def plot_multiplies(xx, yy, vv, t=None, w=0.1, h=0.1, sharey=True):
                               sharey=last_inset if sharey else None, 
                               sharex=last_inset)
             last_inset.set_axes_locator(axes_locator(xx[i,j],yy[i,j]))
-            plt.plot(t, vv[:,i,j], 'k-')
+            l, = plt.plot(t, vv[:,i,j], 'k-')
             plt.xticks([])
             plt.yticks([])
             ax_inset.append(last_inset)
-    return ax_inset
+            lines.append(l)
+    return lines, ax_inset
