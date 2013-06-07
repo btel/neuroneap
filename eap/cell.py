@@ -35,8 +35,8 @@ def get_i():
         c_factor = 100 #from  [i/area]=nA/um2 to [i_membrane]=mA/cm2
         area0 = h.area(x[0], sec=sec)
         area1 = h.area(x[-1], sec=sec)
-        i_sec[0] += sum(pp.i for pp in sec(0).point_processes())/area0*c_factor
-        i_sec[-1] += sum(pp.i for pp in sec(1).point_processes())/area1*c_factor
+        #i_sec[0] += sum(pp.i for pp in sec(0).point_processes())/area0*c_factor
+        #i_sec[-1] += sum(pp.i for pp in sec(1).point_processes())/area1*c_factor
         v += i_sec
     return v
 
@@ -106,40 +106,24 @@ def get_seg_coords():
                             ])
     j = 0
     for sec in h.allsec():
-        n3d = int(h.n3d(sec))
-        x = np.array([h.x3d(i,sec) for i in range(n3d)])
-        y = np.array([h.y3d(i,sec) for i in range(n3d)])
-        z = np.array([h.z3d(i,sec) for i in range(n3d)])
-
-        arcl = np.sqrt(np.diff(x)**2+np.diff(y)**2+np.diff(z)**2)
-        arcl = np.cumsum(np.concatenate(([0], arcl)))
         nseg = sec.nseg
-        pt3d_x = arcl/arcl[-1]
         
         diams = np.ones(nseg)*sec.diam
         lengths = np.ones(nseg)*sec.L*1./nseg
         names = np.repeat(sec.name()[:nchars], nseg).astype("|S%d"%nchars)
 
-        seg_x = np.arange(nseg)*1./nseg
-        
-        x_coord = np.interp(seg_x, pt3d_x, x)
-        y_coord = np.interp(seg_x, pt3d_x, y)
-        z_coord = np.interp(seg_x, pt3d_x, z)
+        seg_x = np.arange(nseg+1)*1./nseg
+
+        x_coord, y_coord, z_coord = get_locs_coord(sec, seg_x)
       
 
-        coords['x0'][j:j+nseg]=x_coord
-        coords['y0'][j:j+nseg]=y_coord
-        coords['z0'][j:j+nseg]=z_coord
+        coords['x0'][j:j+nseg] = x_coord[:-1]
+        coords['y0'][j:j+nseg] = y_coord[:-1]
+        coords['z0'][j:j+nseg] = z_coord[:-1]
         
-        seg_x = (np.arange(nseg)+1.)/nseg
-
-        x_coord = np.interp(seg_x, pt3d_x, x)
-        y_coord = np.interp(seg_x, pt3d_x, y)
-        z_coord = np.interp(seg_x, pt3d_x, z)
-        
-        coords['x1'][j:j+nseg]=x_coord
-        coords['y1'][j:j+nseg]=y_coord
-        coords['z1'][j:j+nseg]=z_coord
+        coords['x1'][j:j+nseg] = x_coord[1:]
+        coords['y1'][j:j+nseg] = y_coord[1:]
+        coords['z1'][j:j+nseg] = z_coord[1:]
 
         coords['diam'][j:j+nseg] = diams
         coords['L'][j:j+nseg] = lengths
@@ -148,6 +132,23 @@ def get_seg_coords():
 
     return coords
 
+def get_locs_coord(sec, loc):
+    """get 3d coordinates of section locations"""
+    n3d = int(h.n3d(sec))
+    x = np.array([h.x3d(i,sec) for i in range(n3d)])
+    y = np.array([h.y3d(i,sec) for i in range(n3d)])
+    z = np.array([h.z3d(i,sec) for i in range(n3d)])
+
+    arcl = np.sqrt(np.diff(x)**2+np.diff(y)**2+np.diff(z)**2)
+    arcl = np.cumsum(np.concatenate(([0], arcl)))
+    nseg = sec.nseg
+    pt3d_x = arcl/arcl[-1]
+        
+    x_coord = np.interp(loc, pt3d_x, x)
+    y_coord = np.interp(loc, pt3d_x, y)
+    z_coord = np.interp(loc, pt3d_x, z)
+
+    return x_coord, y_coord, z_coord
 
 def initialize(dt=0.025):
     #insert_extracellular()
