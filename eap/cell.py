@@ -6,14 +6,24 @@ import numpy as np
 
 h = neuron.h
 
-def integrate(tstop):
-    V_all = []
+def integrate(tstop, i_axial=False):
+    """Run Neuron simulation and return time and 2d array of 
+    transmembrane currents (n_pts x n_segs). If i_axial is true
+    return in addition axial currents"""
+    i_membrane_all = []
+    i_axial_all = [] 
     while h.t < tstop:
         h.fadvance()
-        v= get_i()
-        V_all.append(v)
-    t = np.arange(0, len(V_all))*h.dt
-    return t, np.array(V_all)
+        v = get_i_membrane()
+        i_membrane_all.append(v)
+        if i_axial:
+            iax = get_i_axial()
+            i_axial_all.append(iax)
+    t = np.arange(0, len(i_membrane_all))*h.dt
+    if i_axial:
+        return t, np.array(i_membrane_all), np.array(i_axial_all)
+    else:
+        return t, np.array(i_membrane_all)
 
 def insert_extracellular():
     for sec in h.allsec():
@@ -26,7 +36,7 @@ def get_v():
             v.append(seg.v)
     return v
 
-def get_i():
+def get_i_membrane():
     v = []
     for sec in h.allsec():
         i_sec = [seg.i_membrane for seg in sec]
@@ -39,6 +49,21 @@ def get_i():
         i_sec[-1] += sum(pp.i for pp in sec(1).point_processes())/area1*c_factor
         v += i_sec
     return v
+
+def get_i_axial():
+    """return axial current density in mA/cm2"""
+    currents = []
+    for sec in h.allsec():
+        v0 = sec(0).v
+        for seg in sec:
+            v1 = seg.v
+            l = sec.L/sec.nseg #length in um
+            r = sec.Ra #resistance in ohm
+            iax = (v1-v0)/(r*l*1e-4)
+            currents.append(iax)
+            v0 = v1
+
+    return currents
 
 def get_nsegs():
     nsegs = 0
