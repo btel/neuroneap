@@ -156,7 +156,9 @@ def get_pp_coord(point_process):
 
     loc = point_process.get_loc()
     sec = h.cas()
-    return get_locs_coord(sec, loc)
+    coord = get_locs_coord(sec, loc)
+    h.pop_section()
+    return coord
 
 def get_point_processes():
     """Returns record array with all point processes and their
@@ -164,10 +166,14 @@ def get_point_processes():
     """
     point_processes = []
     for sec in h.allsec():
+        pp_in_sec = []
         for seg in sec.allseg():
-            for pp in seg.point_processes():
-                x, y, z = get_locs_coord(sec, pp.get_loc())
-                point_processes.append((pp, x, y, z))
+            pp_in_sec += seg.point_processes()
+        locs = [pp.get_loc() for pp in pp_in_sec]
+        #remove section from stack to avoid overflow
+        [h.pop_section() for pp in pp_in_sec]
+        x, y, z = get_locs_coord(sec, locs)
+        point_processes += zip(pp_in_sec, x, y, z)
     return point_processes
 
 def initialize(dt=0.025):
