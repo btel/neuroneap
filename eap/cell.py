@@ -158,6 +158,18 @@ def get_pp_coord(point_process):
     sec = h.cas()
     return get_locs_coord(sec, loc)
 
+def get_point_processes():
+    """Returns record array with all point processes and their
+    coordinates as tuple.
+    """
+    point_processes = []
+    for sec in h.allsec():
+        for seg in sec.allseg():
+            for pp in seg.point_processes():
+                x, y, z = get_locs_coord(sec, pp.get_loc())
+                point_processes.append((pp, x, y, z))
+    return point_processes
+
 def initialize(dt=0.025):
     #insert_extracellular()
     h.finitialize()
