@@ -10,7 +10,7 @@ diam=1.
 I_0=1.
 eta    = 1.
 
-def conf_cylinder(pos=(0,0,0), theta=0, L=L):
+def conf_cylinder(pos=(0,0,0), theta=0, L=L, I_0=I_0):
     x0, y0, z0 = pos
     coord = np.zeros((1,),  dtype=[("x0", np.float32),
                             ("y0", np.float32),
@@ -27,6 +27,15 @@ def conf_cylinder(pos=(0,0,0), theta=0, L=L):
     I[0] = I_0
 
     return coord, I
+
+def concat_cylinders(coord_current):
+
+    coords, currents = zip(*coord_current)
+
+    coord = np.hstack(coords)
+    current = np.hstack(currents)
+
+    return coord, current
 
 def test_lsa_cylinder_longl():
     x_pos  = -1.
@@ -172,4 +181,59 @@ def show_potential_on_grid(cable, I):
     plt.show()
 
 
+def test_current_dipole_of_single_cylinder():
+    cylinder_pos = (0, 0, 0)
+    L = 1
 
+    def Q_analytical(L, theta, I0):
+        return (L*I0*np.cos(theta), L*I0*np.sin(theta), 0)
+   
+    pi = np.pi
+    #length, theta, current, expected dipole moment
+    tests = [(L,  0,     1.),
+             (L,  pi/2., 1.),
+             (L,  pi/4., 1.),
+             (L,  pi,    1.),
+             (2*L,0,     1.),
+             (L,  0.,    2.)
+            ]
+
+    for l, theta, I0 in tests:
+        coord, I_axial = conf_cylinder(cylinder_pos, 
+                                       theta=theta,
+                                       L=l,
+                                       I_0=I0)
+        Q = field.calc_dipole_moment(coord, I_axial)
+        Q_expected = Q_analytical(l, theta, I0)
+
+        assert_almost_equal(Q, np.array(Q_expected)[:, None],
+            err_msg='failed for theta=%f, l=%f' % (theta,l))
+
+def test_current_dipole_of_two_cylinders():
+
+    I0, l, theta = 1., 1., 0.
+
+    pi = np.pi
+
+    def assert_dipole_equal(cylinders, Q_expected):
+        coord, I_axial = concat_cylinders(cylinders)
+        Q = field.calc_dipole_moment(coord, I_axial)
+        assert_almost_equal(Q, np.array(Q_expected)[:, None])
+
+    cylinders = [
+        conf_cylinder((0,0,0), theta=theta, L=l, I_0=I0),
+        conf_cylinder((L,0,0), theta=theta, L=l, I_0=I0)
+    ]
+    assert_dipole_equal(cylinders, (2*L*I0, 0, 0))
+    
+    cylinders = [
+        conf_cylinder((0,0,0), theta=0, L=l, I_0=I0),
+        conf_cylinder((2*L,0,0), theta=np.pi, L=l, I_0=I0)
+    ]
+    assert_dipole_equal(cylinders, (0, 0, 0))
+
+    cylinders = [
+        conf_cylinder((0,0,0), theta=0, L=l/2., I_0=I0),
+        conf_cylinder((L,0,0), theta=np.pi/2., L=l/2., I_0=I0)
+    ]
+    assert_dipole_equal(cylinders, (0.5, 0.5, 0))

@@ -122,3 +122,19 @@ def calc_grid(xrange, yrange, n_samp):
     
     return XX, YY
 
+def calc_dipole_moment(coords, i_axial):
+    """calculate current densities given coordinates array coord
+    and axial current densities in each segment i_axial.
+    Current dipole has dimensions of mA*um"""
+
+    n = [coords['x1']-coords['x0'],
+         coords['y1']-coords['y0'],
+         coords['z1']-coords['z0']]
+
+    n = np.array(n)
+    #convert densities in mA/cm2 to intensities in mA
+    i_current = i_axial*coords['diam'][None,:]**2*1e-8/4.*np.pi 
+    dipole_moment = (n[None, :, :]*i_axial[:, None, :]).sum(2)
+
+    return dipole_moment.T
+
