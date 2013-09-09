@@ -58,7 +58,7 @@ def get_i_axial():
         for seg in sec:
             v1 = seg.v
             l = sec.L/sec.nseg #length in um
-            r = sec.Ra #resistance in ohm
+            r = sec.Ra #resistance in ohm*cm
             iax = (v1-v0)/(r*l*1e-4)
             currents.append(iax)
             v0 = v1
