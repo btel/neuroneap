@@ -134,7 +134,7 @@ def calc_dipole_moment(coords, i_axial):
     n = np.array(n)
     #convert densities in mA/cm2 to intensities in mA
     i_current = i_axial*coords['diam'][None,:]**2*1e-8/4.*np.pi 
-    dipole_moment = (n[None, :, :]*i_axial[:, None, :]).sum(2)
+    dipole_moment = (n[None, :, :]*i_current[:, None, :]).sum(2)
 
     return dipole_moment.T
 

@@ -186,7 +186,8 @@ def test_current_dipole_of_single_cylinder():
     L = 1
 
     def Q_analytical(L, theta, I0):
-        return (L*I0*np.cos(theta), L*I0*np.sin(theta), 0)
+        return (L*I0*np.cos(theta)*diam**2/4*1e-8, 
+                L*I0*np.sin(theta)*diam**2/4*1e-8, 0)
    
     pi = np.pi
     #length, theta, current, expected dipole moment
@@ -218,7 +219,8 @@ def test_current_dipole_of_two_cylinders():
     def assert_dipole_equal(cylinders, Q_expected):
         coord, I_axial = concat_cylinders(cylinders)
         Q = field.calc_dipole_moment(coord, I_axial)
-        assert_almost_equal(Q, np.array(Q_expected)[:, None])
+        assert_almost_equal(
+                Q,  np.array(Q_expected)[:, None]*1e-8/4*diam**2)
 
     cylinders = [
         conf_cylinder((0,0,0), theta=theta, L=l, I_0=I0),
