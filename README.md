@@ -6,7 +6,13 @@ It also features some function for visualising the field and drawing neruons mor
 
 You can find some examples in the `figures` directory.
 
-# Authors
+## Authors
 
 * Bartosz Telenczuk, UNIC, CNRS, http://neuroscience.telenczuk.pl
 * Maria Telenczuk, Insitute de la Vision, http://maria.telenczuk.pl
+* 
+
+## License 
+
+The content of this project itself is licensed under the [Creative Commons Attribution 3.0 license](https://creativecommons.org/licenses/by/4.0/) and the underlying source code used to format and display that content is licensed under the [MIT license](http://opensource.org/licenses/mit-license.php).
+
