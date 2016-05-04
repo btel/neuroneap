@@ -33,6 +33,7 @@ def logcontour(xx, yy, zz, n_contours=10):
     
     levs = np.power(10, lev_exp)*np.array([1, 2, 5])[:, np.newaxis]
     levs = np.hstack(levs).astype(int)
+    levs.sort()
    
     def pow_fmt(q, m):
         if (m < 2) and (m > 0):
