@@ -7,13 +7,21 @@ from matplotlib import cm, collections, transforms, colors, ticker
 import field
 
 def plot_neuron(coords, scalar=None, colors=None,
-                norm=colors.Normalize(), cmap=cm.jet):
+                norm=colors.Normalize(), cmap=cm.jet, show_diams=False, width_min=0.5, width_max=5):
    
     a = plt.gca()
     line_segs = [[(c['x0'], c['y0']), (c['x1'], c['y1'])] for c in
                  coords]
 
-    col = collections.LineCollection(line_segs, cmap=cmap, norm=norm)
+    if show_diams:
+        diams = coords['diam']
+        widths = (diams - diams.min()) / (diams.max() - diams.min())
+        widths *= (width_max - width_min)
+        widths += width_min
+    else:
+        widths = None
+    
+    col = collections.LineCollection(line_segs, cmap=cmap, norm=norm, linewidths=widths)
     a.add_collection(col, autolim=True)
     if scalar is not None:
         col.set_array(scalar)
@@ -24,7 +32,7 @@ def plot_neuron(coords, scalar=None, colors=None,
     plt.axis('equal')
     return col
 
-def logcontour(xx, yy, zz, n_contours=10):
+def logcontour(xx, yy, zz, n_contours=10, linecolors=None, linewidths=None, unit=''):
     
     v = np.logspace(np.log10(np.min(zz[:])),
                     np.log10(np.max(zz[:])), n_contours)
@@ -35,20 +43,20 @@ def logcontour(xx, yy, zz, n_contours=10):
     levs = np.hstack(levs).astype(int)
     levs.sort()
    
-    def pow_fmt(q, m):
+    def pow_fmt(q, m, unit=unit):
         if (m < 2) and (m > 0):
-            return "%d" % (10**m * q)
+            return r"$%d$ %s" % (10**m * q, unit)
         if q == 1:
-            return  r"$10^{%d}$" % (m,)
+            return  r"$10^{%d}$ %s" % (m, unit)
         else:
-            return r"$%d\cdot10^{%d}$" % (q,m)
+            return r"$%d\cdot10^{%d}$ %s" % (q, m, unit)
 
 
     fmt = [ pow_fmt(q,m) for q in [1,2,5] for m in lev_exp]
 
     fmt = dict(zip(levs, fmt))
 
-    cs = plt.contour(xx, yy, zz, levs, norm=colors.LogNorm() )
+    cs = plt.contour(xx, yy, zz, levs, norm=colors.LogNorm(), colors=linecolors, linewidths=linewidths)
     plt.clabel(cs, cs.levels, fmt=fmt, inline=1)
 
 def plot_multiplies(xx, yy, vv, t=None, w=0.1, h=0.1, sharey=True):
