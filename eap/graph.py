@@ -40,11 +40,11 @@ def logcontour(xx, yy, zz, n_contours=10, linecolors=None, linewidths=None, unit
                            np.floor(np.log10(v.max())+1))
     
     levs = np.power(10, lev_exp)*np.array([1, 2, 5])[:, np.newaxis]
-    levs = np.hstack(levs).astype(int)
+    levs = np.hstack(levs)
     levs.sort()
    
     def pow_fmt(q, m, unit=unit):
-        if (m < 2) and (m > 0):
+        if (m <= 2) and (m >= 0):
             return r"$%d$ %s" % (10**m * q, unit)
         if q == 1:
             return  r"$10^{%d}$ %s" % (m, unit)
