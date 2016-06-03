@@ -44,6 +44,10 @@ def logcontour(xx, yy, zz, n_contours=10, linecolors=None, linewidths=None, unit
     levs.sort()
    
     def pow_fmt(q, m, unit=unit):
+        if (m == -1):
+            return r"$%.1f$ %s" % (0.1 * q, unit)
+        if (m == -2):
+            return r"$%.2f$ %s" % (0.01 * q, unit)
         if (m <= 2) and (m >= 0):
             return r"$%d$ %s" % (10**m * q, unit)
         if q == 1:
@@ -52,9 +56,9 @@ def logcontour(xx, yy, zz, n_contours=10, linecolors=None, linewidths=None, unit
             return r"$%d\cdot10^{%d}$ %s" % (q, m, unit)
 
 
-    fmt = [ pow_fmt(q,m) for q in [1,2,5] for m in lev_exp]
+    fmt = [(q * 10**m, pow_fmt(q,m)) for q in [1,2,5] for m in lev_exp]
 
-    fmt = dict(zip(levs, fmt))
+    fmt = dict(fmt)
 
     cs = plt.contour(xx, yy, zz, levs, norm=colors.LogNorm(), colors=linecolors, linewidths=linewidths)
     plt.clabel(cs, cs.levels, fmt=fmt, inline=1, fontsize=fontsize)
