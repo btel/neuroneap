@@ -32,7 +32,7 @@ def plot_neuron(coords, scalar=None, colors=None,
     plt.axis('equal')
     return col
 
-def logcontour(xx, yy, zz, n_contours=10, linecolors=None, linewidths=None, unit=''):
+def logcontour(xx, yy, zz, n_contours=10, linecolors=None, linewidths=None, unit='', fontsize=None):
     
     v = np.logspace(np.log10(np.min(zz[:])),
                     np.log10(np.max(zz[:])), n_contours)
@@ -57,7 +57,7 @@ def logcontour(xx, yy, zz, n_contours=10, linecolors=None, linewidths=None, unit
     fmt = dict(zip(levs, fmt))
 
     cs = plt.contour(xx, yy, zz, levs, norm=colors.LogNorm(), colors=linecolors, linewidths=linewidths)
-    plt.clabel(cs, cs.levels, fmt=fmt, inline=1)
+    plt.clabel(cs, cs.levels, fmt=fmt, inline=1, fontsize=fontsize)
 
 def plot_multiplies(xx, yy, vv, t=None, w=0.1, h=0.1, sharey=True):
     """Plot small mutiplies of potential  on a grid
