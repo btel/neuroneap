@@ -170,8 +170,6 @@ def test_cylindric_coordinates():
         obtained = field._cylindric_coords(pt1, pt2, np.array(pos))
         assert (np.concatenate(obtained)==np.array(expected)).all(), comment
 
-
-
 def show_potential_on_grid(cable, I):
     import matplotlib.pyplot as plt
     xx, yy = field.calc_grid([-10,10], [-10,10], 10)

@@ -42,7 +42,9 @@ def calc_v_ext(pos, coord,  I, eta=3.5):
 
 def _cylindric_coords(pt1, pt2, pos):
 
-
+    assert not (pt1==pt2).all(axis=0).any(), ('first and last point of segment '
+                                              'must be different to define a line')
+        
     #calculate distance from line (from wikipedia)
     n = pt2-pt1
     n = n/_vlen(n) #normal vector of cylinder axis
