@@ -47,6 +47,12 @@ def get_i_membrane():
         area1 = h.area(x[-1], sec=sec)
         i_sec[0] += sum(pp.i for pp in sec(0).point_processes())/area0*c_factor
         i_sec[-1] += sum(pp.i for pp in sec(1).point_processes())/area1*c_factor
+
+        for seg_idx, seg in enumerate(sec):
+            seg_area = seg.area()
+            electrode_current = sum(pp.i for pp in seg.point_processes())/seg_area*c_factor
+            i_sec[seg_idx] -= electrode_current
+       
         v += i_sec
     return v
 
